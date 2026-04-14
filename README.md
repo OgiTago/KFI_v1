@@ -1,5 +1,4 @@
-# KFI_v1
-Kalman-filter Force inference
+## Kalman-filter Force inference
 ===
 
 ## Description
