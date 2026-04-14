@@ -6,15 +6,7 @@ Kalman-filter Force inference
 This repository provides the implementation of Kalman-filter Force Inference (KFI), 
 a Bayesian framework to estimate cellular forces (junctional tensions and cellular pressures) from time-lapse microscopy images of epithelial tissues. Unlike static methods, KFI explicitly accounts for tissue dynamics and temporal continuity of forces.
 Details of the method and its validation are described in Ogita et al. (2026) [1].
-
-Usage:
-Using an input file containing vertex positions and connectivity data extracted from epithelial images, the scripts can perform dynamic force inference. 
-A tutorial and example datasets are available in the tutorial/ directory.
-
-## Requirement
-
-* statsmodels 0.12.2
-
+The current version does not support topological changes, such as cell rearrangement or cell division.
 
 ## Usage
 1. Prepare input files
