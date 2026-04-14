@@ -1,5 +1,5 @@
 ## Kalman-filter Force inference
-===
+
 
 ## Description
 This repository provides the implementation of Kalman-filter Force Inference (KFI), 
