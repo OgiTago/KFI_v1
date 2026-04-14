@@ -13,8 +13,9 @@ The current version does not support topological changes, such as cell rearrange
 <br>The inference script requires vertex positions and connectivity data for the entire time series.
 <br>-Data Format: Prepare files containing vertex coordinates and connectivity data for each frame. The format must be identical to the output of [GetVertex](https://github.com/Sugimuralab/GetVertexPlugin). Refer to the sample_data/ directory in this repository for a template.
 <br>-File Organization : Place all files for a single time-series sequence into one directory. Include a time index in the filenames (e.g., frame_001.csv, frame_002.csv). The script sorts files alphabetically to process them in chronological order.
-2. Change the variable "file_directory" in KFI_v1.py to the input directory in step 1.
+2. Change the variable "SampleDirectory" in KFI_v1.py to the input directory in step 1.
 3. Run KFI_v1.py on IDE or IPython.
+4. Change the variable "OutputDirectory" to the output directory in Analysis.py and run it to plot the estimated results.
 
 
 ## Reference
