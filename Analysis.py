@@ -13,7 +13,7 @@ import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from matplotlib.collections import LineCollection
+from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.patches import   Polygon
 
 
@@ -21,15 +21,20 @@ from matplotlib.patches import   Polygon
 Normalize=True
 #%% Input file
 SampleName = "DH4_114"
-SampleDirectory = "./output/{}/".format(SampleName)
+SampleDirectory = "./output/" +SampleName + "/"
+
+OutputDirectory = "./output/{}/".format(SampleName)
         
 
 BinaryDirectory = SampleDirectory + "bin/"
 BinList = natsort.natsorted(glob.glob(BinaryDirectory+"*.dat"))
 AnalysisDirectory = "{}/analysis/".format(SampleDirectory)
 os.makedirs(AnalysisDirectory,exist_ok=True)
-MapDirectory = AnalysisDirectory + "Tmap/"
-os.makedirs(MapDirectory,exist_ok=True)    
+TMapDirectory = AnalysisDirectory + "Tmap/"
+os.makedirs(TMapDirectory,exist_ok=True)    
+PMapDirectory = AnalysisDirectory + "Pmap/"
+os.makedirs(PMapDirectory,exist_ok=True)    
+
 #%%
 def ScaleForces(T,P):
     c = 1/np.mean(T)
@@ -63,7 +68,7 @@ def Draw_Tension(x,y,T,edge,T_LINE_WIDTH = 2.0, tmin = 0,tmax=2.0, savefile = ''
     ax.autoscale_view()
     ax.set_aspect('equal', 'datalim')
     plt.axis('off')
-    #fT.colorbar(line_segments, ax=ax, orientation='vertical')
+    fT.colorbar(line_segments, ax=ax, orientation='vertical')
 
     #fT.show()
     if savefile != '':
@@ -98,7 +103,7 @@ def Draw_Pressure(x,y,P,edge,cell,pmin,pmax,savefile = ''):
     ax.set_aspect('equal', 'datalim')
     plt.axis('off')
 
-    #fP.colorbar(collection, ax=ax,orientation='horizontal')
+    fP.colorbar(collection, ax=ax,orientation='horizontal')
     #fP.show()
     if savefile != '':
         fP.savefig( savefile)
@@ -158,12 +163,22 @@ for ti,bi in enumerate(BinList):
         
         # Plot true tensions         
         Draw_Tension(data.x,data.y,Tt_in,data.edge,T_LINE_WIDTH = 2.0, tmin = 0.3,tmax= 0.5, savefile = '',cmap="jet")
-        plt.savefig(MapDirectory+"TmapT_{}.png".format(ti),dpi=150)
+        plt.savefig(TMapDirectory+"TmapT_{}.png".format(ti),dpi=150)
         plt.close()
         
-        # Plot estimated pressure
+        # Plot estimated tensions
         Draw_Tension(data.x,data.y,Ta_in,data.edge,T_LINE_WIDTH = 2.0, tmin = 0.3,tmax= 0.5, savefile = '',cmap="jet")
-        plt.savefig(MapDirectory+"TmapA_{}.png".format(ti),dpi=150)        
+        plt.savefig(TMapDirectory+"TmapA_{}.png".format(ti),dpi=150)        
+        plt.close()
+        
+        # Plot true pressures
+        Draw_Pressure(data.x,data.y,Pt_in,data.edge,data.cell,pmin = -0.1, pmax=0.5,savefile = '')
+        plt.savefig(PMapDirectory+"PmapT_{}.png".format(ti),dpi=150)
+        plt.close()
+        
+        # Plot estimated tensions
+        Draw_Pressure(data.x,data.y,Pa_in,data.edge,data.cell,pmin = -0.1, pmax=0.5,savefile = '')
+        plt.savefig(PMapDirectory+"TmapA_{}.png".format(ti),dpi=150)        
         plt.close()
 
         # Save        
@@ -175,19 +190,6 @@ for ti,bi in enumerate(BinList):
         Pcor_list.append(np.corrcoef(Pt_in[data.C_in],Pa_in[data.C_in])[0,1])
 E_in = data.E_in
 C_in = data.C_in
-#%% colorbar: Tension
-
-norm = matplotlib.colors.Normalize(vmin=0.3, vmax=0.5)
-fig, cbar = plt.subplots(figsize=(0.5, 5))
-cmap = plt.get_cmap("jet")
-matplotlib.colorbar.Colorbar(
-    ax=cbar,
-    mappable=matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap),
-    orientation="vertical",
-)#.set_label("Tension", fontsize=20)
-
-plt.savefig(MapDirectory+"T_colorbar.png",dpi=150,bbox_inches="tight")
-
 
 #%%
 Tt_list = np.array(Tt_list)
@@ -205,22 +207,15 @@ Ta_mean = np.array(Ta_mean)
 Pa_mean = np.array(Pa_mean)
 
 
-#%% Plot T-t 
-Rescale=False
+#%% Plot Tension vs time 
 label_size=20
 tick_size=18
-
-if Rescale:
-    TtDirectory=AnalysisDirectory+"Tt_r/"
-
-else:
-    TtDirectory=AnalysisDirectory+"Tt/"
-
+# Make saving directory
+TtDirectory=AnalysisDirectory+"Tension_time/"
 os.makedirs(TtDirectory,exist_ok=True)
-plt.close()
-if Rescale:
-    Ta_list = (Ta_list.T * Tt_mean/Ta_mean).T
+# for time-axis
 time = np.linspace(1,len(Tt_list[:,0])/10,len(Tt_list[:,0]))
+
 for i in data.E_in:
     plt.plot(time,Tt_list[:,i],label="True")
     plt.plot(time,Ta_list[:,i],label="Analysis")
@@ -229,25 +224,20 @@ for i in data.E_in:
     plt.xlabel("Time",fontsize=label_size)
     plt.ylabel("Tension",fontsize=label_size)
     plt.tick_params(labelsize=tick_size)
-    plt.savefig(TtDirectory+"{}.png".format(i),dpi=150,bbox_inches="tight")
+    plt.tight_layout()
+    plt.savefig(TtDirectory+"{}.png".format(i),dpi=150)
     plt.close()
 
 
-#%% Plot P-t
-if Normalize:
-    PtDirectory=AnalysisDirectory+"Pt_norm/"
-else:
-    PtDirectory=AnalysisDirectory+"Pt/"
+#%% Plot Pressure vs time
+PtDirectory=AnalysisDirectory+"Pressure_time/"
 os.makedirs(PtDirectory,exist_ok=True)
-RMSE_P = []
-RMSE_P_spinup = []
-if Normalize:
-    Pt_list = (Pt_list.T - Pt_mean.T).T
-    Pa_list = (Pa_list.T - Pa_mean.T).T
 
-if Rescale:
-    Pa_list = (Pa_list.T * (Tt_mean/Ta_mean)).T
+# Mean centering of pressure
+Pt_list = (Pt_list.T - Pt_mean.T).T
+Pa_list = (Pa_list.T - Pa_mean.T).T
 
+for i in data.C_in:
     plt.plot(time,Pt_list[:,i],label="True",lw=3)
     plt.plot(time,Pa_list[:,i],label="Analysis",lw=3)
     uns = 1.96 * np.sqrt(Pa_var_list[:,i])
@@ -255,11 +245,7 @@ if Rescale:
     plt.xlabel("Time",fontsize=label_size)
     plt.ylabel("Pressure",fontsize=label_size)
     plt.tick_params(labelsize=tick_size)
-
-    if Normalize:
-        plt.savefig(PtDirectory+"{}.png".format(i),dpi=150,bbox_inches="tight"))
-    else:
-        plt.savefig(PtDirectory+"{}_n.png".format(i),dpi=150,bbox_inches="tight"))
+    plt.savefig(PtDirectory+"{}.png".format(i),dpi=150)
     plt.close()
 
 #%% Correlation coefficient
@@ -283,8 +269,8 @@ plt.legend(loc="lower right",fontsize=16)
 plt.savefig(AnalysisDirectory+"CorrCoef.png",bbox_inches="tight")
 
 #%% Save RMSE_T and RMSE_P
-np.save(SampleDirectory+"Tcor_{}.npy".format(SampleName),np.array(Tcor_list))
-np.save(SampleDirectory+"Pcor_{}.npy".format(SampleName),np.array(Pcor_list))
+np.save(OutputDirectory+"Tcor_{}.npy".format(SampleName),np.array(Tcor_list))
+np.save(OutputDirectory+"Pcor_{}.npy".format(SampleName),np.array(Pcor_list))
 
 
 
